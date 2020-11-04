@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">SciCalc</string>
+    <!-- calculator buttons -->
+    <!-- numbers -->
+    <string name="zero">0</string>
+    <string name="one">1</string>
+    <string name="two">2</string>
+    <string name="three">3</string>
+    <string name="four">4</string>
+    <string name="five">5</string>
+    <string name="six">6</string>
+    <string name="seven">7</string>
+    <string name="eight">8</string>
+    <string name="nine">9</string>
+    <!-- command buttons -->
+    <string name="equal_to">=</string>
+    <string name="clear_all">AC</string>
+    <string name="right_parenthesis">)</string>
+    <string name="left_parenthesis">(</string>
+    <string name="dot">.</string>
+    <!-- <string name=""></string> -->
+    <!-- simple operators -->
+    <string name="sum">+</string>
+    <string name="division">÷</string>
+    <string name="subtraction">-</string>
+    <string name="multiplication">×</string>
+    <string name="percentage">%</string>
+    <!-- angle operators -->
+    <string name="sine">sin</string>
+    <string name="cosine">cos</string>
+    <string name="tangent">tgn</string>
+    <string name="secant">tgn</string>
+    <string name="cosecant">cosec</string>
+    <string name="cotangent">cotgn</string>
+    <!-- math constants -->
+    <string name="euler">e</string>
+    <string name="pi">π</string>
+    <!-- advanced operators -->
+    <string name="factorial">x!</string>
+    <string name="natural_logarithm">ln</string>
+    <string name="logarithm">log</string>
+    <string name="square_root">√</string>
+    <string name="math_pot">x^y</string>
+    <string name="to_square">x^2</string>
+    <string name="inverse_value">Inv</string>
+    <string name="module">|x|</string>
+    <string name="change_sign">-/+</string>
+</resources>
