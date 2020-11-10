@@ -28,10 +28,10 @@
     <!-- angle operators -->
     <string name="sine">sin</string>
     <string name="cosine">cos</string>
-    <string name="tangent">tgn</string>
-    <string name="secant">tgn</string>
+    <string name="tangent">tan</string>
+    <string name="secant">sec</string>
     <string name="cosecant">cosec</string>
-    <string name="cotangent">cotgn</string>
+    <string name="cotangent">cotan</string>
     <!-- math constants -->
     <string name="euler">e</string>
     <string name="pi">π</string>
