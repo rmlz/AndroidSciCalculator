@@ -144,20 +144,23 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    var result = false;
+    var isResult = false;
     val maxCharacters: Int = 28
     var displayText: String = "";
     var displayFormula: String = "";
     var isMaxCharacter: Boolean = false;
+    var formulaInput: String = ""
+    var displayOutput: String = ""
 
     fun buttonClicked(view: View) {
         val button = view as Button
         val input = button.text.toString()
         if (input == "=") {
-            calculateResult()
+            isResult = true
+            tvDisplayResult.text = showResult(displayFormula)
         } else {
-            val formulaInput = changeToOutputOrFormula(input, true) // change the keyboard input to a formula input
-            val displayOutput =  changeToOutputOrFormula(input, false)
+            displayOutput =  changeToOutputOrFormula(input, false) // change the keyboard input to be shown in calculator display
+            formulaInput = changeToOutputOrFormula(input, true) // change the keyboard input to a formula input
             isMaxCharacter = checkIsMaxCharacters(displayText, maxCharacters) // update if maxCharacter is fulfilled
             displayText = buttonToString(displayText, displayOutput, isMaxCharacter) // update display string and checks max character
             displayFormula = buttonToFormula(displayFormula, formulaInput, isMaxCharacter) // update display string and checks max character
@@ -166,15 +169,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun showResult(formulaInput: String):String {
+        Log.e( "Actual","formula is $formulaInput")
+        calculateResult(formulaInput)
+        return ""
+    }
+    fun calculateResult(displayFormula: String):Long{
+        var substitute = insertMultiplySign(displayFormula)
+
+        return 0
+    }
+
     fun changeToOutputOrFormula(input: String, isFormula: Boolean): String {
         if (isFormula) {
             if (input.isDigitsOnly() || input in arrayOf("+", "-", "%", "(", ")", ".") ){ return input }
             else if (input in arrayOf("sin", "cos", "tan", "ln", "log")){ return "Math.$input(" }
-            else if (input in arrayOf("sec", "cosec", "cotgn")) { return "($input(" }
+            else if (input in arrayOf("sec", "cosec", "cotan")) { return "($input(" }
             else if (input == "÷"){ return "/" }
             else if (input == "×"){ return "*" }
-            else if (input == "e"){ return "Math.E" }
-            else if (input == "π"){ return "Math.PI" }
+            else if (input == "e"){ return "Math.E()" }
+            else if (input == "π"){ return "Math.PI()" }
             else if (input == "x!"){ return "factorial(" }
             else if (input == "√"){ return "sqrt(" }
             else if (input == "x^y"){ return "^" }
@@ -185,7 +199,7 @@ class MainActivity : AppCompatActivity() {
             return " "
             } else {
             if (input.isDigitsOnly() || input in arrayOf("+", "-", "%", "(", ")", ".", "÷", "×", "e", "π") ){ return input }
-            else if (input in arrayOf("sin", "cos", "tan", "ln", "log", "sec", "cosec", "cotgn")){ return "$input(" }
+            else if (input in arrayOf("sin", "cos", "tan", "ln", "log", "sec", "cosec", "cotan")){ return "$input(" }
             else if (input == "x!"){ return "fact(" }
             else if (input == "√"){ return "sqrt(" }
             else if (input == "x^y"){ return "^" }
@@ -195,16 +209,13 @@ class MainActivity : AppCompatActivity() {
             return " "
         }
     }
-    fun showResult() {
-
-    }
 
     fun buttonToString(actual:String, new:String, isMaxCharacters: Boolean): String {
         val newString: String = actual + new;
         if (isMaxCharacters) {
             return actual
         }
-        Log.e( "Actual","actual is $actual, newString is $newString")
+        //Log.e( "Actual","actual is $actual, newString is $newString")
         return newString
     };
 
@@ -215,7 +226,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun refreshDisplay(text: String, isMaxCharacter: Boolean){
-        // Max display characters
         //Log.e("Actual", "The display must show $text")
         if (!isMaxCharacter) {
             if (text == "") {
@@ -226,23 +236,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-    fun sum() {
-
-    }
-
-    fun divide() {
-
-    }
-
-    fun multiply() {
-
-    }
-
-    fun subtract() {
-
-    }
 
     // Helpers
     private fun checkIsMaxCharacters(text: String, maxCharacters: Int): Boolean{
@@ -255,8 +248,35 @@ class MainActivity : AppCompatActivity() {
         for (i in 1..x) {
             result = result * i
         }
-
         return result
     }
 
+    private fun insertMultiplySign(displayFormula: String): String {
+        // Add the multiply sign where there's no math operator
+        var substitute = displayFormula
+        var arrayOfPattern = arrayOf(
+                "([0-9]+\\.*[0-9]*)(\\()", // "1.0("
+                "(\\))([0-9]+\\.*[0-9]+)", // ")1.0"
+                // "([A-z])(\\()", // "A("
+                "(\\))([A-z])", // )A"
+                "(\\))(\\()", //")("
+                "(\\()(\\()", //"(("
+                "([A-z])([0-9])", // a8
+                "([0-9])([A-z])", //8a
+                "(\\))([A-z])" // )log
+        )
+
+        for (i in arrayOfPattern) {
+            println("Pattern usado é $i")
+            var pattern = Regex(i)
+            var matches = pattern.findAll(substitute).iterator()
+            while (matches.hasNext()) {
+                var teste = matches.next()
+                substitute = substitute.replace(pattern, "$1"+"*"+"$2")
+                println("Conseguimos o seguinte resultado " + teste.value)
+                println("Nova string é: $substitute")
+            }
+        }
+        return substitute
+    }
 }
