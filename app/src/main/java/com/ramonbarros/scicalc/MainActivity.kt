@@ -7,6 +7,8 @@ import android.view.View
 import android.widget.Button
 import androidx.core.text.isDigitsOnly
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlin.Exception
+import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -174,12 +176,68 @@ class MainActivity : AppCompatActivity() {
         calculateResult(formulaInput)
         return ""
     }
-    fun calculateResult(displayFormula: String):Long{
-        var substitute = ""
-        substitute = insertMultiplySign(displayFormula)
-        substitute = changePiEuler(substitute)
-        substitute = resolveTrigonometricAndLogarithm(substitute)
-        return 0
+    fun calculateResult(displayFormula: String):Double{
+        var substitute = displayFormula
+        var isOperation = true
+        while (isOperation) {
+            substitute = insertMultiplySign(substitute)
+            substitute = changePiEuler(substitute)
+            substitute = solveParenthesis(substitute)
+            substitute = resolveTrigonometricAndLogarithm(substitute)
+            substitute = solveOperations(substitute)
+
+            if (substitute.matches("-?\\d*\\.*\\d+?".toRegex())) {
+                isOperation = false
+            }
+        }
+        return substitute.toDouble()
+    }
+
+    fun solveOperations(args: String): String {
+        var substitute = args
+        val arrayOfPattern: Array<String> = arrayOf(
+                "(-?\\d*\\.*\\d+?)\\^(-?\\d*\\.*\\d+?)", // x^y
+                "(-?\\d*\\.*\\d+?)\\/(-?\\d*\\.*\\d+?)", // x/y
+                "(-?\\d*\\.*\\d+?)\\*(-?\\d*\\.*\\d+?)", // x*y
+                "(-?\\d*\\.*\\d+?)\\+(-?\\d*\\.*\\d+?)", // x+y
+                "(-?\\d*\\.*\\d+?)\\-(-?\\d*\\.*\\d+?)" // x-y
+        )
+
+        for (i in arrayOfPattern.indices) {
+            val pattern = Regex(arrayOfPattern[i])
+            val matches = pattern.findAll(substitute).iterator()
+            while (matches.hasNext()) {
+                val match = matches.next()
+                val operation = match.groupValues[0]
+                val a = match.groupValues[1].toDouble()
+                val b = match.groupValues[2].toDouble()
+                println("Estamos olhando dentro de $operation")
+                when (i) {
+                    0 -> substitute = substitute.replace(pattern, a.pow(b).toString())
+                    1 -> substitute = substitute.replace(pattern, a.div(b).toString())
+                    2 -> substitute = substitute.replace(pattern, a.times(b).toString())
+                    3 -> substitute = substitute.replace(pattern, a.plus(b).toString())
+                    4 -> substitute = substitute.replace(pattern, a.minus(b).toString())
+                }
+                println("Nova string é: $substitute")
+            }
+        }
+        return substitute
+    }
+
+    fun solveParenthesis(args: String): String {
+        var substitute = args
+        val pattern = Regex("\\((.+)\\)")
+        val matches = pattern.findAll(substitute).iterator()
+        while (matches.hasNext()) {
+            val match = matches.next()
+            var op_substitute = match.groupValues[1]
+            println("Olhando dentro da  $op_substitute")
+            op_substitute = solveOperations(op_substitute)
+            substitute = substitute.replace(pattern, "("+ op_substitute + ")")
+
+        }
+        return substitute
     }
 
     fun changePiEuler(args: String): String {
@@ -212,15 +270,15 @@ class MainActivity : AppCompatActivity() {
     fun resolveTrigonometricAndLogarithm(args: String): String {
         var substitute = args
         val arrayOfPattern: Array<String> = arrayOf(
-                "(sin\\(([0-9]+\\.*[0-9]*)\\))", "(cos\\(([0-9]+\\.*[0-9]*)\\))", // sin(n); cos(n)
-                "(tan\\(([0-9]+\\.*[0-9]*)\\))", "(ln\\(([0-9]+\\.*[0-9]*)\\))",  // tan(n); ln(n)
-                "(log\\(([0-9]+\\.*[0-9]*)\\))", "(sec\\(([0-9]+\\.*[0-9]*)\\))", // log(n); sec(n)
-                "(csc\\(([0-9]+\\.*[0-9]*)\\))", "(ctn\\(([0-9]+\\.*[0-9]*)\\))" // cosec(n), cotan(n)
+                "(sin\\(-?\\d*\\.*\\d+?\\))", "(cos\\(-?\\d*\\.*\\d+?\\))", // sin(n); cos(n)
+                "(tan\\(-?\\d*\\.*\\d+?\\))", "(ln\\(-?\\d*\\.*\\d+?\\))",  // tan(n); ln(n)
+                "(log\\(-?\\d*\\.*\\d+?\\))", "(sec\\(-?\\d*\\.*\\d+?\\))", // log(n); sec(n)
+                "(csc\\(-?\\d*\\.*\\d+?\\))", "(ctn\\(-?\\d*\\.*\\d+?\\))" // cosec(n), cotan(n)
         )
 
         for (i in arrayOfPattern.indices) {
-            val pati = arrayOfPattern[i]
-            println("Pattern usado é $pati")
+            val patt_i = arrayOfPattern[i]
+            println("Pattern usado é $patt_i")
             val pattern = Regex(arrayOfPattern[i])
             val matches = pattern.findAll(substitute).iterator()
             while (matches.hasNext()) {
@@ -244,7 +302,6 @@ class MainActivity : AppCompatActivity() {
         }
         return substitute
     }
-
 
     fun changeToOutputOrFormula(input: String, isFormula: Boolean): String {
         if (isFormula) {
@@ -319,10 +376,10 @@ class MainActivity : AppCompatActivity() {
         // Add the multiply sign where there's no math operator
         var substitute = displayFormula
         val arrayOfPattern: Array<String> = arrayOf(
-                "([0-9]+\\.*[0-9]*)(\\()", // "1.0("
-                "(\\))([0-9]+\\.*[0-9]+)", // ")1.0"
+                "(-?\\d*\\.*\\d+?\\()", // "1.0("
+                "(\\)-?\\d*\\.*\\d+?)", // ")1.0"
                 // "([A-z])(\\()", // "A("
-                "(\\))([A-z])", // )A"
+                "(\\)-?\\d*\\.*\\d+?)", // )A"
                 "(\\))(\\()", //")("
                 "(\\()(\\()", //"(("
                 "([A-z])([0-9])", // a8
