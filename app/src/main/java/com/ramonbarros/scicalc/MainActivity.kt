@@ -175,9 +175,44 @@ class MainActivity : AppCompatActivity() {
         return ""
     }
     fun calculateResult(displayFormula: String):Long{
-        var substitute = insertMultiplySign(displayFormula)
-
+        var substitute = ""
+        substitute = insertMultiplySign(displayFormula)
+        substitute = changePiEuler(substitute)
+        substitute = resolveTrigonometric(substitute)
         return 0
+    }
+
+    fun changePiEuler(args: String): String {
+        var substitute = args
+        var arrayOfPattern: Array<String> = arrayOf("(Math.E\\(\\))", "(Math.PI\\(\\))") // "Math.E()", "Math.PI"
+
+        for (i in arrayOfPattern) {
+            println("Pattern usado é $i")
+            var pattern = Regex(i)
+            var matches = pattern.findAll(substitute).iterator()
+            if (i == "Math.E\\(\\)") {
+                while (matches.hasNext()) {
+                    var teste = matches.next()
+                    substitute = substitute.replace(pattern, Math.E.toString())
+                    println("Conseguimos o seguinte resultado " + teste.value)
+                    println("Nova string é: $substitute")
+                }
+            } else {
+                while (matches.hasNext()) {
+                    var teste = matches.next()
+                    substitute = substitute.replace(pattern, Math.PI.toString())
+                    println("Conseguimos o seguinte resultado " + teste.value)
+                    println("Nova string é: $substitute")
+                }
+            }
+        }
+        return substitute
+    }
+
+    fun resolveTrigonometric(args: String): String {
+        // TODO Resolve Trigonometric Functions and substitute on String
+
+        return ""
     }
 
     fun changeToOutputOrFormula(input: String, isFormula: Boolean): String {
@@ -236,7 +271,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     // Helpers
     private fun checkIsMaxCharacters(text: String, maxCharacters: Int): Boolean{
         return text.length + 1 >= maxCharacters
@@ -254,7 +288,7 @@ class MainActivity : AppCompatActivity() {
     private fun insertMultiplySign(displayFormula: String): String {
         // Add the multiply sign where there's no math operator
         var substitute = displayFormula
-        var arrayOfPattern = arrayOf(
+        var arrayOfPattern: Array<String> = arrayOf(
                 "([0-9]+\\.*[0-9]*)(\\()", // "1.0("
                 "(\\))([0-9]+\\.*[0-9]+)", // ")1.0"
                 // "([A-z])(\\()", // "A("
