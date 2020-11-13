@@ -178,30 +178,30 @@ class MainActivity : AppCompatActivity() {
         var substitute = ""
         substitute = insertMultiplySign(displayFormula)
         substitute = changePiEuler(substitute)
-        substitute = resolveTrigonometric(substitute)
+        substitute = resolveTrigonometricAndLogarithm(substitute)
         return 0
     }
 
     fun changePiEuler(args: String): String {
         var substitute = args
-        var arrayOfPattern: Array<String> = arrayOf("(Math.E\\(\\))", "(Math.PI\\(\\))") // "Math.E()", "Math.PI"
+        val arrayOfPattern: Array<String> = arrayOf("(Math.E\\(\\))", "(Math.PI\\(\\))") // "Math.E()", "Math.PI"
 
         for (i in arrayOfPattern) {
             println("Pattern usado é $i")
-            var pattern = Regex(i)
-            var matches = pattern.findAll(substitute).iterator()
+            val pattern = Regex(i)
+            val matches = pattern.findAll(substitute).iterator()
             if (i == "Math.E\\(\\)") {
                 while (matches.hasNext()) {
-                    var teste = matches.next()
+                    val match = matches.next()
                     substitute = substitute.replace(pattern, Math.E.toString())
-                    println("Conseguimos o seguinte resultado " + teste.value)
+                    println("Conseguimos o seguinte resultado " + match.value)
                     println("Nova string é: $substitute")
                 }
             } else {
                 while (matches.hasNext()) {
-                    var teste = matches.next()
+                    val match = matches.next()
                     substitute = substitute.replace(pattern, Math.PI.toString())
-                    println("Conseguimos o seguinte resultado " + teste.value)
+                    println("Conseguimos o seguinte resultado " + match.value)
                     println("Nova string é: $substitute")
                 }
             }
@@ -209,17 +209,47 @@ class MainActivity : AppCompatActivity() {
         return substitute
     }
 
-    fun resolveTrigonometric(args: String): String {
-        // TODO Resolve Trigonometric Functions and substitute on String
+    fun resolveTrigonometricAndLogarithm(args: String): String {
+        var substitute = args
+        val arrayOfPattern: Array<String> = arrayOf(
+                "(sin\\(([0-9]+\\.*[0-9]*)\\))", "(cos\\(([0-9]+\\.*[0-9]*)\\))", // sin(n); cos(n)
+                "(tan\\(([0-9]+\\.*[0-9]*)\\))", "(ln\\(([0-9]+\\.*[0-9]*)\\))",  // tan(n); ln(n)
+                "(log\\(([0-9]+\\.*[0-9]*)\\))", "(sec\\(([0-9]+\\.*[0-9]*)\\))", // log(n); sec(n)
+                "(csc\\(([0-9]+\\.*[0-9]*)\\))", "(ctn\\(([0-9]+\\.*[0-9]*)\\))" // cosec(n), cotan(n)
+        )
 
-        return ""
+        for (i in arrayOfPattern.indices) {
+            val pati = arrayOfPattern[i]
+            println("Pattern usado é $pati")
+            val pattern = Regex(arrayOfPattern[i])
+            val matches = pattern.findAll(substitute).iterator()
+            while (matches.hasNext()) {
+                val match = matches.next()
+                val number = match.groupValues[2].toDouble()
+                println("O valor da match é $number")
+                when (i) {
+                    0 -> substitute = substitute.replace(pattern, kotlin.math.sin(number).toString())
+                    1 -> substitute = substitute.replace(pattern, kotlin.math.cos(number).toString());
+                    2 -> substitute = substitute.replace(pattern, kotlin.math.tan(number).toString());
+                    3 -> substitute = substitute.replace(pattern, kotlin.math.ln(number).toString());
+                    4 -> substitute = substitute.replace(pattern, kotlin.math.log10(number).toString());
+                    5 -> substitute = substitute.replace(pattern, (1/kotlin.math.cos(number)).toString()); //secant = 1/cos(x)
+                    6 -> substitute = substitute.replace(pattern, (1/kotlin.math.sin(number)).toString()); // cossecant = 1/sin(x)
+                    7 -> substitute = substitute.replace(pattern, (1/kotlin.math.tan(number)).toString()); // cotangent = 1/tan(x)
+                }
+
+                println("Conseguimos o seguinte resultado " + match.value)
+                println("Nova string é: $substitute")
+            }
+        }
+        return substitute
     }
+
 
     fun changeToOutputOrFormula(input: String, isFormula: Boolean): String {
         if (isFormula) {
             if (input.isDigitsOnly() || input in arrayOf("+", "-", "%", "(", ")", ".") ){ return input }
-            else if (input in arrayOf("sin", "cos", "tan", "ln", "log")){ return "Math.$input(" }
-            else if (input in arrayOf("sec", "cosec", "cotan")) { return "($input(" }
+            else if (input in arrayOf("sin", "cos", "tan", "ln", "log", "sec", "csc", "ctn")){ return "$input(" }
             else if (input == "÷"){ return "/" }
             else if (input == "×"){ return "*" }
             else if (input == "e"){ return "Math.E()" }
@@ -272,12 +302,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Helpers
-    private fun checkIsMaxCharacters(text: String, maxCharacters: Int): Boolean{
+    fun checkIsMaxCharacters(text: String, maxCharacters: Int): Boolean{
         return text.length + 1 >= maxCharacters
     }
 
-    private fun factorial(args: Long): Any {
-        var x = args.toInt()
+    fun factorial(args: Long): Any {
+        val x = args.toInt()
         var result = 1
         for (i in 1..x) {
             result = result * i
@@ -285,10 +315,10 @@ class MainActivity : AppCompatActivity() {
         return result
     }
 
-    private fun insertMultiplySign(displayFormula: String): String {
+    fun insertMultiplySign(displayFormula: String): String {
         // Add the multiply sign where there's no math operator
         var substitute = displayFormula
-        var arrayOfPattern: Array<String> = arrayOf(
+        val arrayOfPattern: Array<String> = arrayOf(
                 "([0-9]+\\.*[0-9]*)(\\()", // "1.0("
                 "(\\))([0-9]+\\.*[0-9]+)", // ")1.0"
                 // "([A-z])(\\()", // "A("
@@ -302,12 +332,12 @@ class MainActivity : AppCompatActivity() {
 
         for (i in arrayOfPattern) {
             println("Pattern usado é $i")
-            var pattern = Regex(i)
-            var matches = pattern.findAll(substitute).iterator()
+            val pattern = Regex(i)
+            val matches = pattern.findAll(substitute).iterator()
             while (matches.hasNext()) {
-                var teste = matches.next()
+                val match = matches.next()
                 substitute = substitute.replace(pattern, "$1"+"*"+"$2")
-                println("Conseguimos o seguinte resultado " + teste.value)
+                println("Conseguimos o seguinte resultado " + match.value)
                 println("Nova string é: $substitute")
             }
         }
