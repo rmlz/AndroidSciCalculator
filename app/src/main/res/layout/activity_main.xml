@@ -269,7 +269,8 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="3dp"
         android:backgroundTint="@color/grey"
-        android:clickable="true"
+        android:focusable="auto"
+        android:onClick="buttonClicked"
         android:text="@string/backspace"
         app:layout_constraintBottom_toTopOf="@+id/button_9"
         app:layout_constraintEnd_toStartOf="@+id/guideline4"
@@ -617,7 +618,7 @@
         android:padding="10sp"
         android:scrollbarAlwaysDrawHorizontalTrack="false"
         android:scrollbarAlwaysDrawVerticalTrack="false"
-        android:scrollbars="horizontal|vertical"
+        android:scrollbars="vertical"
         android:scrollHorizontally="false"
         android:text="0"
         android:textAlignment="textEnd"
@@ -629,31 +630,33 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tvDisplayResult"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:background="#00BCBCBC"
-        android:freezesText="false"
-        android:isScrollContainer="false"
-        android:keepScreenOn="false"
-        android:lineSpacingExtra="8sp"
-        android:padding="10sp"
-        android:scrollbarAlwaysDrawHorizontalTrack="false"
-        android:scrollbarAlwaysDrawVerticalTrack="false"
-        android:scrollbars="horizontal"
-        android:scrollHorizontally="true"
-        android:text="0"
-        android:textAlignment="textEnd"
-        android:textSize="30sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/guideline3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline"
-        app:layout_constraintVertical_bias="1.0" />
+            android:id="@+id/tvDisplayResult"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="#00BCBCBC"
+            android:freezesText="false"
+            android:isScrollContainer="false"
+            android:keepScreenOn="false"
+            android:lineSpacingExtra="8sp"
+            android:padding="10sp"
+            android:scrollX="0sp"
+            android:scrollbarAlwaysDrawHorizontalTrack="false"
+            android:scrollbarAlwaysDrawVerticalTrack="false"
+            android:scrollbarStyle="outsideInset"
+            android:scrollbars="horizontal"
+            android:scrollHorizontally="true"
+            android:text="0"
+            android:textAlignment="textEnd"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/guideline3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/guideline"
+            app:layout_constraintVertical_bias="0.0" />
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -689,7 +692,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="150dp" />
+        app:layout_constraintGuide_begin="198dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline8"
@@ -703,7 +706,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_begin="209dp" />
+        app:layout_constraintGuide_begin="248dp" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline10"
@@ -718,5 +721,36 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_begin="57dp" />
+
+    <ScrollView
+        android:id="@+id/tvHistoryScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:paddingRight="6dp"
+        android:scrollbarStyle="outsideInset"
+        app:layout_constraintBottom_toTopOf="@+id/guideline7"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvDisplayResult">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvHistory"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:lineSpacingExtra="10sp"
+                android:maxLines="10"
+                android:textAlignment="textEnd"
+                android:text=""
+                android:textSize="20sp"/>
+        </LinearLayout>
+    </ScrollView>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -31,8 +31,8 @@
     <string name="cosine">cos</string>
     <string name="tangent">tan</string>
     <string name="secant">sec</string>
-    <string name="cosecant">cosec</string>
-    <string name="cotangent">cotan</string>
+    <string name="cosecant">csc</string>
+    <string name="cotangent">ctn</string>
     <!-- math constants -->
     <string name="euler">e</string>
     <string name="pi">π</string>
