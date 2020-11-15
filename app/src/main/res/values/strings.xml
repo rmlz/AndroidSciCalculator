@@ -17,6 +17,7 @@
     <string name="clear_all">AC</string>
     <string name="right_parenthesis">)</string>
     <string name="left_parenthesis">(</string>
+    <string name="backspace">\u232B</string>
     <string name="dot">.</string>
     <!-- <string name=""></string> -->
     <!-- simple operators -->

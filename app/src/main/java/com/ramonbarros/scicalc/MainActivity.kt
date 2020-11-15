@@ -7,6 +7,8 @@ import android.view.View
 import android.widget.Button
 import androidx.core.text.isDigitsOnly
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.NumberFormatException
+import java.math.BigInteger
 import kotlin.Exception
 import kotlin.math.pow
 
@@ -153,8 +155,21 @@ class MainActivity : AppCompatActivity() {
     var isMaxCharacter: Boolean = false;
     var formulaInput: String = ""
     var displayOutput: String = ""
+    var mathError: Boolean = false;
+
+    fun resetDisplay() {
+        if (isResult) {
+            tvDisplayCalc.text = tvDisplayResult.text
+            displayFormula = tvDisplayResult.text.toString()
+            displayOutput = tvDisplayResult.text.toString()
+            displayText = tvDisplayResult.text.toString()
+            tvDisplayResult.text = "0"
+            isResult = false
+        }
+    }
 
     fun buttonClicked(view: View) {
+        resetDisplay()
         val button = view as Button
         val input = button.text.toString()
         if (input == "=") {
@@ -171,53 +186,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showResult(formulaInput: String):String {
+    fun showResult(formulaInput: String): String {
         Log.e( "Actual","formula is $formulaInput")
-        calculateResult(formulaInput)
-        return ""
+        return calculateResult(formulaInput)
     }
-    fun calculateResult(displayFormula: String):Double{
+
+    fun calculateResult(displayFormula: String):String{
         var substitute = displayFormula
         var isOperation = true
+        substitute = insertMultiplySign(substitute)
+        substitute = changePiEuler(substitute)
         while (isOperation) {
-            substitute = insertMultiplySign(substitute)
-            substitute = changePiEuler(substitute)
+            substitute = resolveComplexOperations(substitute)
             substitute = solveParenthesis(substitute)
-            substitute = resolveTrigonometricAndLogarithm(substitute)
             substitute = solveOperations(substitute)
-
             if (substitute.matches("-?\\d*\\.*\\d+?".toRegex())) {
                 isOperation = false
             }
         }
-        return substitute.toDouble()
+        println(substitute.toDouble())
+        return substitute.toDouble().toString()
     }
 
     fun solveOperations(args: String): String {
         var substitute = args
         val arrayOfPattern: Array<String> = arrayOf(
-                "(-?\\d*\\.*\\d+?)\\^(-?\\d*\\.*\\d+?)", // x^y
-                "(-?\\d*\\.*\\d+?)\\/(-?\\d*\\.*\\d+?)", // x/y
-                "(-?\\d*\\.*\\d+?)\\*(-?\\d*\\.*\\d+?)", // x*y
-                "(-?\\d*\\.*\\d+?)\\+(-?\\d*\\.*\\d+?)", // x+y
-                "(-?\\d*\\.*\\d+?)\\-(-?\\d*\\.*\\d+?)" // x-y
+                "(-?\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)", // x^y case 0
+                "(-?\\d*\\.*\\d+?)\\/(-?\\d+\\.*\\d*)", // x/y case 1
+                "(-?\\d*\\.*\\d+?)\\*(-?\\d+\\.*\\d*)", // x*y case 2
+                "(-?\\d*\\.*\\d+?)\\+(-?\\d+\\.*\\d*)", // x+y case 3
+                "(-?\\d*\\.*\\d+?)\\-(-?\\d+\\.*\\d*)" // x-y case 4
         )
 
         for (i in arrayOfPattern.indices) {
             val pattern = Regex(arrayOfPattern[i])
             val matches = pattern.findAll(substitute).iterator()
+            var a: Double;
+            var b: Double;
             while (matches.hasNext()) {
-                val match = matches.next()
-                val operation = match.groupValues[0]
-                val a = match.groupValues[1].toDouble()
-                val b = match.groupValues[2].toDouble()
-                println("Estamos olhando dentro de $operation")
+                try {
+                    val match = matches.next()
+                    val operation = match.groupValues[0]
+                    println(operation)
+                    a = match.groupValues[1].toDouble()
+                    b = match.groupValues[2].toDouble()
+                    println("Estamos olhando dentro de $operation")
+                } catch (e: Exception) {
+                    break
+                }
                 when (i) {
-                    0 -> substitute = substitute.replace(pattern, a.pow(b).toString())
-                    1 -> substitute = substitute.replace(pattern, a.div(b).toString())
-                    2 -> substitute = substitute.replace(pattern, a.times(b).toString())
-                    3 -> substitute = substitute.replace(pattern, a.plus(b).toString())
-                    4 -> substitute = substitute.replace(pattern, a.minus(b).toString())
+                    0 -> substitute = substitute.replace(pattern, a.pow(b).toBigDecimal().toPlainString())
+                    1 -> substitute = substitute.replace(pattern, a.div(b).toBigDecimal().toPlainString())
+                    2 -> substitute = substitute.replace(pattern, a.times(b).toBigDecimal().toPlainString())
+                    3 -> substitute = substitute.replace(pattern, a.plus(b).toBigDecimal().toPlainString())
+                    4 -> substitute = substitute.replace(pattern, a.minus(b).toBigDecimal().toPlainString())
                 }
                 println("Nova string é: $substitute")
             }
@@ -227,15 +249,17 @@ class MainActivity : AppCompatActivity() {
 
     fun solveParenthesis(args: String): String {
         var substitute = args
-        val pattern = Regex("\\((.+)\\)")
-        val matches = pattern.findAll(substitute).iterator()
-        while (matches.hasNext()) {
-            val match = matches.next()
-            var op_substitute = match.groupValues[1]
-            println("Olhando dentro da  $op_substitute")
-            op_substitute = solveOperations(op_substitute)
-            substitute = substitute.replace(pattern, "("+ op_substitute + ")")
-
+        val arrayOfPattern: Array<String> = arrayOf("\\((.+)\\)")
+        for (i in arrayOfPattern.indices) {
+            val pattern = Regex(arrayOfPattern[i])
+            val matches = pattern.findAll(substitute).iterator()
+            while (matches.hasNext()) {
+                val match = matches.next()
+                var op_substitute = match.groupValues[1]
+                println("Olhando dentro da  $op_substitute")
+                op_substitute = solveOperations(op_substitute)
+                substitute = substitute.replace(pattern, "($op_substitute)")
+            }
         }
         return substitute
     }
@@ -244,56 +268,60 @@ class MainActivity : AppCompatActivity() {
         var substitute = args
         val arrayOfPattern: Array<String> = arrayOf("(Math.E\\(\\))", "(Math.PI\\(\\))") // "Math.E()", "Math.PI"
 
-        for (i in arrayOfPattern) {
-            println("Pattern usado é $i")
-            val pattern = Regex(i)
+        for (i in arrayOfPattern.indices) {
+            println("Pattern usado é " + arrayOfPattern[i])
+            val pattern = Regex(arrayOfPattern[i])
             val matches = pattern.findAll(substitute).iterator()
-            if (i == "Math.E\\(\\)") {
-                while (matches.hasNext()) {
-                    val match = matches.next()
-                    substitute = substitute.replace(pattern, Math.E.toString())
-                    println("Conseguimos o seguinte resultado " + match.value)
-                    println("Nova string é: $substitute")
-                }
-            } else {
-                while (matches.hasNext()) {
-                    val match = matches.next()
-                    substitute = substitute.replace(pattern, Math.PI.toString())
-                    println("Conseguimos o seguinte resultado " + match.value)
-                    println("Nova string é: $substitute")
+            while (matches.hasNext()) {
+                val match = matches.next()
+                when (i) {
+                    0 -> substitute = substitute.replace(pattern, Math.E.toString())
+                    1 -> substitute = substitute.replace(pattern, Math.PI.toString())
                 }
             }
         }
         return substitute
     }
 
-    fun resolveTrigonometricAndLogarithm(args: String): String {
+    fun resolveComplexOperations(args: String): String {
         var substitute = args
         val arrayOfPattern: Array<String> = arrayOf(
-                "(sin\\(-?\\d*\\.*\\d+?\\))", "(cos\\(-?\\d*\\.*\\d+?\\))", // sin(n); cos(n)
-                "(tan\\(-?\\d*\\.*\\d+?\\))", "(ln\\(-?\\d*\\.*\\d+?\\))",  // tan(n); ln(n)
-                "(log\\(-?\\d*\\.*\\d+?\\))", "(sec\\(-?\\d*\\.*\\d+?\\))", // log(n); sec(n)
-                "(csc\\(-?\\d*\\.*\\d+?\\))", "(ctn\\(-?\\d*\\.*\\d+?\\))" // cosec(n), cotan(n)
-        )
+                "(sin\\((-?\\d*\\.*\\d+?)\\))", "(cos\\((-?\\d*\\.*\\d+?)\\))", // sin(n); cos(n)
+                "(tan\\((-?\\d*\\.*\\d+?)\\))", "(ln\\((-?\\d*\\.*\\d+?)\\))",  // tan(n); ln(n)
+                "(log\\((-?\\d*\\.*\\d+?)\\))", "(sec\\((-?\\d*\\.*\\d+?)\\))", // log(n); sec(n)
+                "(csc\\((-?\\d*\\.*\\d+?)\\))", "(ctn\\((-?\\d*\\.*\\d+?)\\))", // cosec(n), cotan(n)
+                "(sqrt\\((-?\\d*\\.*\\d+?)\\))", "(module\\((-?\\d*\\.*\\d+?)\\))", // sqrt(n), mod(n)
+                "(factorial\\((-?\\d*\\.*\\d+?)\\))", "(inverseValue\\((-?\\d*\\.*\\d+?)\\))", // fact(n), Inv(n)
+                "(changeSign\\((-?\\d*\\.*\\d+?)\\))" // +/-(n)
+                        )
 
         for (i in arrayOfPattern.indices) {
             val patt_i = arrayOfPattern[i]
             println("Pattern usado é $patt_i")
             val pattern = Regex(arrayOfPattern[i])
             val matches = pattern.findAll(substitute).iterator()
+            var number: Double
             while (matches.hasNext()) {
                 val match = matches.next()
-                val number = match.groupValues[2].toDouble()
+                try {
+                    number = match.groupValues[2].toDouble()
+                } catch (e:NumberFormatException) {
+                    break
+                }
                 println("O valor da match é $number")
                 when (i) {
-                    0 -> substitute = substitute.replace(pattern, kotlin.math.sin(number).toString())
-                    1 -> substitute = substitute.replace(pattern, kotlin.math.cos(number).toString());
-                    2 -> substitute = substitute.replace(pattern, kotlin.math.tan(number).toString());
-                    3 -> substitute = substitute.replace(pattern, kotlin.math.ln(number).toString());
-                    4 -> substitute = substitute.replace(pattern, kotlin.math.log10(number).toString());
-                    5 -> substitute = substitute.replace(pattern, (1/kotlin.math.cos(number)).toString()); //secant = 1/cos(x)
-                    6 -> substitute = substitute.replace(pattern, (1/kotlin.math.sin(number)).toString()); // cossecant = 1/sin(x)
-                    7 -> substitute = substitute.replace(pattern, (1/kotlin.math.tan(number)).toString()); // cotangent = 1/tan(x)
+                    0 -> substitute = substitute.replace(pattern, kotlin.math.sin(number).toBigDecimal().toPlainString());
+                    1 -> substitute = substitute.replace(pattern, kotlin.math.cos(number).toBigDecimal().toPlainString());
+                    2 -> substitute = substitute.replace(pattern, kotlin.math.tan(number).toBigDecimal().toPlainString());
+                    3 -> substitute = substitute.replace(pattern, kotlin.math.ln(number).toBigDecimal().toPlainString());
+                    4 -> substitute = substitute.replace(pattern, kotlin.math.log10(number).toBigDecimal().toPlainString());
+                    5 -> substitute = substitute.replace(pattern, (1/kotlin.math.cos(number)).toBigDecimal().toPlainString()); //secant = 1/cos(x)
+                    6 -> substitute = substitute.replace(pattern, (1/kotlin.math.sin(number)).toBigDecimal().toPlainString()); // cossecant = 1/sin(x)
+                    7 -> substitute = substitute.replace(pattern, (1/kotlin.math.tan(number)).toBigDecimal().toPlainString()); // cotangent = 1/tan(x)
+                    8 -> substitute = substitute.replace(pattern, kotlin.math.sqrt(number).toBigDecimal().toPlainString());
+                    9 -> substitute = substitute.replace(pattern, kotlin.math.abs(number).toBigDecimal().toPlainString())
+                    10 -> substitute = substitute.replace(pattern, factorial(number.toLong()).toString())
+                    11 -> substitute = substitute.replace(pattern, (1/number).toBigDecimal().toPlainString()) // Inverse(n)
                 }
 
                 println("Conseguimos o seguinte resultado " + match.value)
@@ -317,7 +345,7 @@ class MainActivity : AppCompatActivity() {
             else if (input == "x^2"){ return "^2" }
             else if (input == "Inv"){ return "inverseValue(" }
             else if (input == "|x|"){ return "module(" }
-            else if (input == "-/+"){ return "inverseValue(" }
+            else if (input == "-/+"){ return "changeSign(" }
             return " "
             } else {
             if (input.isDigitsOnly() || input in arrayOf("+", "-", "%", "(", ")", ".", "÷", "×", "e", "π") ){ return input }
@@ -358,7 +386,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Helpers
     fun checkIsMaxCharacters(text: String, maxCharacters: Int): Boolean{
         return text.length + 1 >= maxCharacters
     }
@@ -377,13 +404,11 @@ class MainActivity : AppCompatActivity() {
         var substitute = displayFormula
         val arrayOfPattern: Array<String> = arrayOf(
                 "(-?\\d*\\.*\\d+?\\()", // "1.0("
-                "(\\)-?\\d*\\.*\\d+?)", // ")1.0"
-                // "([A-z])(\\()", // "A("
-                "(\\)-?\\d*\\.*\\d+?)", // )A"
+                "(\\)\\d*\\.*\\d+?)", // ")1.0"
                 "(\\))(\\()", //")("
-                "(\\()(\\()", //"(("
+                // "(\\()(\\()", //"(("
                 "([A-z])([0-9])", // a8
-                "([0-9])([A-z])", //8a
+                "(-?\\d*\\.*\\d+?)([A-z])", //8a -8a
                 "(\\))([A-z])" // )log
         )
 
@@ -393,9 +418,15 @@ class MainActivity : AppCompatActivity() {
             val matches = pattern.findAll(substitute).iterator()
             while (matches.hasNext()) {
                 val match = matches.next()
-                substitute = substitute.replace(pattern, "$1"+"*"+"$2")
-                println("Conseguimos o seguinte resultado " + match.value)
-                println("Nova string é: $substitute")
+                val a = match.groupValues[1]
+                val b = match.groupValues[2]
+                if (a == "^" || b == "^"){
+                    break
+                } else {
+                    substitute = substitute.replace(pattern, "$1" + "*" + "$2")
+                    println("Conseguimos o seguinte resultado " + match.value)
+                    println("Nova string é: $substitute")
+                }
             }
         }
         return substitute
