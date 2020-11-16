@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     var isResult = false;
-    val maxCharacters: Int = 90
+    val maxCharacters: Int = 30
     var displayText: String = "";
     var displayFormula: String = "";
     var isMaxCharacter: Boolean = false;
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun calculateButtonPressed() {
+    fun calculateButtonPressed(storeResult: Boolean) {
         var a = displayText
         var b = a.count()
         if (displayText.count() > 0) {
@@ -88,17 +88,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun changeResultSign() {
+        calculateButtonPressed()
+        try {
+            var result = lastResult.toDouble() * (-1)
+            if (result == -0.0){ result = 0.0 }
+            tvDisplayResult.text = result.toString()
+            lastResult = result.toString()
+        } catch (e: Exception) {
+            mathError = true
+        }
+
+    }
+
+    fun storeResult() {
+      //TODO Create a history of latter calculations
+    }
+
     fun buttonClicked(view: View) {
         resetDisplay()
         val button = view as Button
         val input = button.text.toString()
         if (input == "=") {
             calculateButtonPressed()
+            storeResult()
         } else if (input == "AC") {
             eraseDisplay()
         } else if (input == "\u232B") {
             Log.e("Teste", "Pressed $input")
             eraseLastInput()
+        } else if (input =="-/+") {
+            changeResultSign()
         } else {
             lastInput = input
             displayOutput =  changeToOutputOrFormula(input, false) // change the keyboard input to be shown in calculator display
@@ -291,7 +311,7 @@ class MainActivity : AppCompatActivity() {
             else if (input == "x^2"){ return "^2" }
             else if (input == "Inv"){ return "inverseValue(" }
             else if (input == "|x|"){ return "module(" }
-            else if (input == "-/+"){ return "changeSign(" }
+            //else if (input == "-/+"){ return "changeSign(" }
             return " "
             } else {
             if (input.isDigitsOnly() || input in arrayOf("+", "-", "%", "(", ")", ".", "÷", "×", "e", "π") ){ return input }
