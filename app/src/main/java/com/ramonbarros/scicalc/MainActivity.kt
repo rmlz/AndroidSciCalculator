@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     var displayOutput: String = ""
     var lastInput: String = ""
     var lastResult = ""
-    val calculationHist = emptyArray<String>().toMutableList()
+    var calculationHist = emptyArray<String>().toMutableList()
 
 
     fun resetDisplay() {
@@ -102,14 +102,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun updateHistory() {
+        var i = calculationHist.size
+        if (calculationHist.size > 9) {
+            calculationHist = calculationHist.dropLast(1).toMutableList()
+        }
         calculationHist.add(0, "$displayText = $lastResult")
         var history = ""
-        for (i in calculationHist){
-            history += "$i \n"
+        for (i in calculationHist.indices){
+
+            history += (i+1).toString() + ": " + calculationHist[i] + "\n"
         }
         tvHistory.text = history
     }
-    //55*6log(99)pi e / 8 ^ 6
+
     fun buttonClicked(view: View) {
         resetDisplay()
         val button = view as Button
