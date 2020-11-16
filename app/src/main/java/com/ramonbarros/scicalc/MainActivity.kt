@@ -21,15 +21,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     var isResult = false;
+    var isMaxCharacter: Boolean = false;
+    var mathError: Boolean = false;
     val maxCharacters: Int = 30
     var displayText: String = "";
     var displayFormula: String = "";
-    var isMaxCharacter: Boolean = false;
     var formulaInput: String = ""
     var displayOutput: String = ""
     var lastInput: String = ""
     var lastResult = ""
-    var mathError: Boolean = false;
+    val calculationHist = emptyArray<String>().toMutableList()
 
 
     fun resetDisplay() {
@@ -75,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun calculateButtonPressed(storeResult: Boolean) {
+    fun calculateButtonPressed() {
         var a = displayText
         var b = a.count()
         if (displayText.count() > 0) {
@@ -98,20 +99,24 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             mathError = true
         }
-
     }
 
-    fun storeResult() {
-      //TODO Create a history of latter calculations
+    fun updateHistory() {
+        calculationHist.add(0, "$displayText = $lastResult")
+        var history = ""
+        for (i in calculationHist){
+            history += "$i \n"
+        }
+        tvHistory.text = history
     }
-
+    //55*6log(99)pi e / 8 ^ 6
     fun buttonClicked(view: View) {
         resetDisplay()
         val button = view as Button
         val input = button.text.toString()
         if (input == "=") {
             calculateButtonPressed()
-            storeResult()
+            updateHistory()
         } else if (input == "AC") {
             eraseDisplay()
         } else if (input == "\u232B") {
