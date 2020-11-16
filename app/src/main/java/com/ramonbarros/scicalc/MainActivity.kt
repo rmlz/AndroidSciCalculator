@@ -163,7 +163,8 @@ class MainActivity : AppCompatActivity() {
                 try {
                     substitute = resolveComplexOperations(substitute)
                     substitute = solveParenthesis(substitute)
-                    substitute = solveOperations(substitute)
+                    substitute = solvePowMultiDiv(substitute)
+                    substitute = solveSumSubstraction(substitute)
 
                     if (substitute.matches("-?\\d*\\.*\\d+?".toRegex())) {
                         isOperation = false
@@ -184,18 +185,29 @@ class MainActivity : AppCompatActivity() {
         return lastResult
     }
 
-    fun solveOperations(args: String): String {
-        var substitute = args
-        val arrayOfPattern: Array<String> = arrayOf(
-                "(-?\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)", // x^y case 0
-                "(-?\\d*\\.*\\d+?)\\/(-?\\d+\\.*\\d*)", // x/y case 1
-                "(-?\\d*\\.*\\d+?)\\*(-?\\d+\\.*\\d*)", // x*y case 2
-                "(-?\\d*\\.*\\d+?)\\+(-?\\d+\\.*\\d*)", // x+y case 3
-                "(-?\\d*\\.*\\d+?)\\-(-?\\d+\\.*\\d*)" // x-y case 4
-        )
 
-        for (i in arrayOfPattern.indices) {
-            val pattern = Regex(arrayOfPattern[i])
+    fun solveSumSubstraction(args: String): String {
+        val arrayOfPattern: Array<String> = arrayOf(
+                "(-?\\d*\\.*\\d+?)\\+(-?\\d+\\.*\\d*)", // x+y
+                "(-?\\d*\\.*\\d+?)\\-(-?\\d+\\.*\\d*)" // x-y
+        )
+        return solveOperations(arrayOfPattern, args)
+    }
+
+    fun solvePowMultiDiv(args: String): String {
+        val arrayOfPattern: Array<String> = arrayOf(
+                "[A-z\\d\\)]\\-(\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)", // z - x^y
+                "(-?\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)", // x^y
+                "(-?\\d*\\.*\\d+?)\\/(-?\\d+\\.*\\d*)", // x/y
+                "(-?\\d*\\.*\\d+?)\\*(-?\\d+\\.*\\d*)" // x*y
+        )
+        return solveOperations(arrayOfPattern, args)
+    }
+
+    fun solveOperations(arrayOfPattern: Array<String>, args: String ): String {
+        var substitute = args
+        for (i in arrayOfPattern) {
+            val pattern = Regex(i)
             val matches = pattern.findAll(substitute).iterator()
             var a: Double;
             var b: Double;
@@ -211,11 +223,12 @@ class MainActivity : AppCompatActivity() {
                     break
                 }
                 when (i) {
-                    0 -> substitute = substitute.replace(pattern, a.pow(b).toBigDecimal().toPlainString())
-                    1 -> substitute = substitute.replace(pattern, a.div(b).toBigDecimal().toPlainString())
-                    2 -> substitute = substitute.replace(pattern, a.times(b).toBigDecimal().toPlainString())
-                    3 -> substitute = substitute.replace(pattern, a.plus(b).toBigDecimal().toPlainString())
-                    4 -> substitute = substitute.replace(pattern, a.minus(b).toBigDecimal().toPlainString())
+                    "[A-z\\d\\)]\\-(\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(Regex("(\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)"), a.pow(b).toBigDecimal().toPlainString())
+                    "(-?\\d*\\.*\\d+?)\\^(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(pattern, a.pow(b).toBigDecimal().toPlainString())
+                    "(-?\\d*\\.*\\d+?)\\/(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(pattern, a.div(b).toBigDecimal().toPlainString())
+                    "(-?\\d*\\.*\\d+?)\\*(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(pattern, a.times(b).toBigDecimal().toPlainString())
+                    "(-?\\d*\\.*\\d+?)\\+(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(pattern, a.plus(b).toBigDecimal().toPlainString())
+                    "(-?\\d*\\.*\\d+?)\\-(-?\\d+\\.*\\d*)" -> substitute = substitute.replace(pattern, a.minus(b).toBigDecimal().toPlainString())
                 }
                 println("Nova string é: $substitute")
             }
@@ -233,7 +246,8 @@ class MainActivity : AppCompatActivity() {
                 val match = matches.next()
                 var op_substitute = match.groupValues[1]
                 println("Olhando dentro da  $op_substitute")
-                op_substitute = solveOperations(op_substitute)
+                op_substitute = solvePowMultiDiv(op_substitute)
+                op_substitute = solveSumSubstraction(op_substitute)
                 substitute = substitute.replace(pattern, "($op_substitute)")
             }
         }
@@ -393,7 +407,7 @@ class MainActivity : AppCompatActivity() {
                 val a = match.groupValues[1]
                 val b = match.groupValues[2]
                 if (a == "^" || b == "^"){
-                    break
+                    continue
                 } else {
                     substitute = substitute.replace(pattern, "$1" + "*" + "$2")
                     println("Conseguimos o seguinte resultado " + match.value)
