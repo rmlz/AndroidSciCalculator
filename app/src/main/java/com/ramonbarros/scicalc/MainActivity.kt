@@ -183,6 +183,7 @@ class MainActivity : AppCompatActivity() {
                     0 -> substitute = substitute.replace(pattern, Math.E.toString())
                     1 -> substitute = substitute.replace(pattern, Math.PI.toString())
                 }
+                matches.next()
             }
         }
         return substitute
